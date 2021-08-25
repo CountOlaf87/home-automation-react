@@ -1,12 +1,36 @@
 import { Container, Grid, Card, CardContent, Typography, CardMedia, Button } from '@material-ui/core';
 
-import React from 'react'
-import { useState } from 'react';
+import React, { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useHistory } from "react-router";
 import { BrowserRouter, Route, Link, Switch } from 'react-router-dom';
-import TimeComponent from '../../TimeComponent';
+import TimeComponent from '../TimeComponent';
 import useStyles from './MainPageStyles';
+import { auth, db, logout } from "../../firebase";
 
-function MainPage({ Logout }) {
+function MainPage() {
+
+  const [user, loading, error] = useAuthState(auth);
+  const [name, setName] = useState("");
+  const history = useHistory();
+  const fetchUserName = async () => {
+    try {
+      const query = await db
+        .collection("users")
+        .where("uid", "==", user?.uid)
+        .get();
+      const data = await query.docs[0].data();
+      setName(data.name);
+    } catch (err) {
+      console.error(err);
+      alert("An error occured while fetching user data");
+    }
+  };
+  useEffect(() => {
+    if (loading) return;
+    if (!user) return history.replace("/");
+    fetchUserName();
+  }, [user, loading]);
 
   const classes = useStyles();
 
@@ -21,12 +45,10 @@ function MainPage({ Logout }) {
     }
   ]
 
-  const userName = 'Olaf';
-
   return (
     <BrowserRouter>
       <Container className={classes.cardGrid}>
-        <TimeComponent userName={userName}/>
+        <TimeComponent userName={name}/>
       </Container>
       <Container className={classes.cardGrid} maxWidth="md">
         <Grid container spacing={4}>
@@ -41,11 +63,11 @@ function MainPage({ Logout }) {
             </Grid>
           ))}
         </Grid>
-        <Grid container spacing={4}>
+        {/* <Grid container spacing={4}>
           <Grid item key="button-1" xs={12} sm={6} md={4}>
             <Button onClick={Logout}>Logout</Button>
           </Grid>
-        </Grid>
+        </Grid> */}
       </Container>
     </BrowserRouter>
   )
