@@ -15,6 +15,7 @@ const db = app.firestore();
 
 const signInWithEmailAndPassword = async (email, password) => {
   try {
+    console.log("test")
     await auth.signInWithEmailAndPassword(email, password);
   } catch (err) {
     console.error(err);
